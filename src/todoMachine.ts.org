@@ -1,0 +1,113 @@
+import { assign, Machine, StateSchema } from "xstate";
+
+interface TodoMachineSchema extends StateSchema {
+	states: {
+		reading: {
+			states: {
+				unknown: {},
+				pending: {},
+				completed: {},
+				hist: {}
+			}
+		},
+		editing: {
+
+		},
+		deleted: {}
+	}
+}
+
+type TodoMachineEvent = { type: "TOGGLE_COMPLETE"}
+	| { type: "DELETE"}
+	| { type: "EDIT"}
+	| { type: "CHANGE"; value: string}
+	| { type: "COMMIT"}
+	| { type: "BLUR"}
+	| { type: "CANCEL"}
+
+export interface TodoMachineContext {
+	id: string | undefined
+	title: string | undefined
+	completed: boolean
+	prevTitle: string
+}
+
+export const todoMachine = Machine<TodoMachineContext, TodoMachineSchema, TodoMachineEvent>({
+  id: "todo",
+  initial: "reading",
+  context: {
+    id: undefined,
+    title: "",
+	prevTitle: "",
+	completed: false
+  },
+  on: {
+    TOGGLE_COMPLETE: {
+      target: ".reading.completed"
+    },
+    DELETE: "deleted"
+  },
+  states: {
+    reading: {
+      initial: "unknown",
+      states: {
+        unknown: {
+			on: {
+				"": [
+				  { target: "completed", cond: ctx => ctx.completed },
+				  { target: "pending" }
+				]
+			  }
+        },
+        pending: {},
+        completed: {
+			on: {
+				TOGGLE_COMPLETE: {
+				  target: "pending",
+				  actions: [assign({ completed: false }), "notifyChanged"]
+				}
+			  }
+        },
+        hist: {
+          type: "history"
+        }
+      },
+      on: {
+        EDIT: {
+          target: "editing",
+          actions: "focusInput"
+        }
+      }
+    },
+    editing: {
+      onEntry: assign({ prevTitle: (ctx:any) => ctx.title }),
+      on: {
+        CHANGE: {
+			actions: assign({
+				title: (ctx: any, e: any) => e.value
+			  })
+        },
+        COMMIT: [
+           {
+		 	target: "reading.hist",
+			 actions: "notifyChanged",
+			 //Todo: Enabling next line raise a TS error
+           	// cond: ctx => ctx.title && ctx.title.trim().length > 0
+           },
+           { target: "deleted" }
+        ],
+        BLUR: {
+          target: "reading",
+          actions: "notifyChanged"
+        },
+        CANCEL: {
+          target: "reading",
+		  actions: assign({ title: (ctx: any) => ctx.prevTitle })
+        }
+      }
+    },
+    deleted: {
+      onEntry: "notifyDeleted"
+    }
+  }
+});

@@ -3,14 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/classnames": "^2.2.7",
     "@types/jest": "24.0.9",
     "@types/node": "11.10.5",
     "@types/react": "16.8.7",
     "@types/react-dom": "16.8.2",
+    "@types/uuid": "^3.4.4",
+    "classnames": "^2.2.6",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
     "react-scripts": "2.1.8",
-    "typescript": "3.3.3333"
+    "todomvc-app-css": "^2.2.0",
+    "todomvc-common": "^1.0.5",
+    "typescript": "3.3.3333",
+    "uuid": "^3.3.2",
+    "uuid-v4": "^0.1.0",
+    "xstate": "^4.3.3"
   },
   "scripts": {
     "start": "react-scripts start",
